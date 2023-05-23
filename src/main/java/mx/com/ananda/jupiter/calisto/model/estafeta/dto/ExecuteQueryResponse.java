@@ -1,4 +1,4 @@
-package mx.com.ananda.jupiter.calisto.model.dto;
+package mx.com.ananda.jupiter.calisto.model.estafeta.dto;
 
 import lombok.Data;
 

@@ -1,4 +1,4 @@
-package mx.com.ananda.jupiter.calisto.model.dto;
+package mx.com.ananda.jupiter.calisto.model.estafeta.dto;
 
 import lombok.Data;
 
@@ -8,7 +8,7 @@ public class ExecuteQueryResult {
 
     private String errorCode;
 
-    private String ErrorCodeDescriptionENG;
+    private String errorCodeDescriptionENG;
 
-    private TrackingData TrackingData;
+    private TrackingData trackingData;
 }
