@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class TrackingData {
-    public TrackingDataDetails trackingDataDetails;
+    private TrackingDataDetails trackingDataDetails;
 }

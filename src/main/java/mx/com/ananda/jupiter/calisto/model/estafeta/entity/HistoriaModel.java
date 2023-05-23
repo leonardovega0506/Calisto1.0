@@ -28,10 +28,10 @@ public class HistoriaModel {
     private String codigo_lugar;
 
     @Column(name = "codigo_excepcion")
-    private String codigoException;
+    private String codigoExcepcion;
 
     @Column(name = "descripcion_excepcion")
-    private String codigoExcepcion;
+    private String descripcionExcepcion;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JsonIgnore

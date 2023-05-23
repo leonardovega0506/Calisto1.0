@@ -16,4 +16,6 @@ public class TrackingDataDetails {
     private String statusSPA;
 
     private History history;
+
+    private String waybill;
 }
