@@ -6,5 +6,5 @@ import java.util.List;
 
 @Data
 public class History {
-    private List<HistoryEntry> entries;
+    private List<HistoryEntry> history;
 }

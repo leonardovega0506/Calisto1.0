@@ -1,9 +1,8 @@
 package mx.com.ananda.jupiter.calisto.services.implementation;
 
 import lombok.Data;
-import mx.com.ananda.jupiter.calisto.model.estafeta.dto.ExecuteQueryResult;
-import mx.com.ananda.jupiter.calisto.model.estafeta.dto.HistoryEntry;
-import mx.com.ananda.jupiter.calisto.model.estafeta.dto.TrackingData;
+import lombok.extern.slf4j.Slf4j;
+import mx.com.ananda.jupiter.calisto.model.estafeta.dto.*;
 import mx.com.ananda.jupiter.calisto.model.estafeta.entity.HistoriaModel;
 import mx.com.ananda.jupiter.calisto.model.estafeta.entity.TrakingDataModel;
 import mx.com.ananda.jupiter.calisto.repository.IHistoryRepository;
@@ -19,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class TrackingDataServiceImpl implements ITrackingDataService {
 
     @Autowired
@@ -45,22 +45,25 @@ public class TrackingDataServiceImpl implements ITrackingDataService {
 
     @Override
     public Optional<TrakingDataModel> findByTrackingByWaybill(String waybill) {
-        TrakingDataModel trackingAPI = mapearEntidadTracking(restTemplate.getForObject(basePath+"/estafeta/trackingByNumber?numeroGuia="+waybill, ExecuteQueryResult.class));
+        log.info("Numero de Tracking: {}",waybill);
+        RespuestaEstafeta trackingAPI = restTemplate.getForObject("http://localhost:56098/ananda/jupiter/titan/estafeta/trackingByNumber?numeroGuia="+waybill, RespuestaEstafeta.class);
+        log.info("tracking: {}",trackingAPI);
+        TrakingDataModel tracking = mapearEntidadTracking(trackingAPI);
         Optional<TrakingDataModel> oTracking = null;
-        if(trackingAPI.getCodigoGuia() !=null){
+        if(tracking.getCodigoGuia() !=null){
             oTracking = iTracking.findByCodigoGuia(waybill);
             if(oTracking.isEmpty()){
-                ExecuteQueryResult eQResult = restTemplate.getForObject(basePath+"/estafeta/trackingByNumber?numeroGuia="+waybill, ExecuteQueryResult.class);
+                RespuestaEstafeta eQResult = restTemplate.getForObject(basePath+"/estafeta/trackingByNumber?numeroGuia="+waybill, RespuestaEstafeta.class);
                 List<HistoriaModel> listaHistorias = new ArrayList<>();
-                for(var historia:eQResult.getTrackingData().getTrackingDataDetails().getHistory().getEntries()){
+                for(var historia:eQResult.getExecuteQueryResponse().getExecuteQueryResult().getTrackingData().getTrackingData().getHistory().getHistory()){
                     listaHistorias.add(mapearEntidadHistoria(historia));
                     for(HistoriaModel ht:listaHistorias){
-                        ht.setTrackingData(trackingAPI);
+                        ht.setTrackingData(tracking);
                         iHistory.save(ht);
                     }
                 }
-                iTracking.save(trackingAPI);
-                Optional<TrakingDataModel> trackingTraido= iTracking.findById(trackingAPI.getIdTracking());
+                iTracking.save(tracking);
+                Optional<TrakingDataModel> trackingTraido= iTracking.findById(tracking.getIdTracking());
                 return trackingTraido;
             }
             else{
@@ -76,14 +79,14 @@ public class TrackingDataServiceImpl implements ITrackingDataService {
 
     @Override
     public Optional<TrakingDataModel> findByTrackingByShortWaybillId(String shortWaybillId) {
-        TrakingDataModel trackingAPI = mapearEntidadTracking(restTemplate.getForObject(basePath+"/estafeta/trackingByNumber?numeroGuia="+shortWaybillId, ExecuteQueryResult.class));
+        TrakingDataModel trackingAPI = mapearEntidadTracking(restTemplate.getForObject(basePath+"/estafeta/trackingShortWayBill?numeroRastreo="+shortWaybillId, RespuestaEstafeta.class));
         Optional<TrakingDataModel> oTracking = null;
-        if(trackingAPI.getCodigoGuia() !=null){
+        if(trackingAPI.getCodigoRastreo() !=null){
             oTracking = iTracking.findByCodigoRastreo(shortWaybillId);
             if(oTracking.isEmpty()){
                 ExecuteQueryResult eQResult = restTemplate.getForObject(basePath+"/estafeta/trackingByNumber?numeroGuia="+shortWaybillId, ExecuteQueryResult.class);
                 List<HistoriaModel> listaHistorias = new ArrayList<>();
-                for(var historia:eQResult.getTrackingData().getTrackingDataDetails().getHistory().getEntries()){
+                for(var historia:eQResult.getTrackingData().getTrackingData().getHistory().getHistory()){
                     listaHistorias.add(mapearEntidadHistoria(historia));
                     for(HistoriaModel ht:listaHistorias){
                         ht.setTrackingData(trackingAPI);
@@ -109,13 +112,13 @@ public class TrackingDataServiceImpl implements ITrackingDataService {
         return iHistory.findByTrackingData_IdTracking(idTracking);
     }
 
-    private TrakingDataModel mapearEntidadTracking(ExecuteQueryResult resulstado){
+    private TrakingDataModel mapearEntidadTracking(RespuestaEstafeta resulstado){
         TrakingDataModel tracking = new TrakingDataModel();
-        tracking.setCodigoError(resulstado.getErrorCode());
-        tracking.setDescripcionError(resulstado.getErrorCodeDescriptionSPA());
-        tracking.setEstatusTracking(resulstado.getTrackingData().getTrackingDataDetails().getStatusSPA());
-        tracking.setCodigoGuia(resulstado.getTrackingData().getTrackingDataDetails().getWaybill());
-        tracking.setCodigoRastreo(resulstado.getTrackingData().getTrackingDataDetails().getShortWaybillId());
+        tracking.setCodigoError(resulstado.getExecuteQueryResponse().getExecuteQueryResult().getErrorCode());
+        tracking.setDescripcionError(resulstado.getExecuteQueryResponse().getExecuteQueryResult().getErrorCodeDescriptionSPA());
+        tracking.setEstatusTracking(resulstado.getExecuteQueryResponse().getExecuteQueryResult().getTrackingData().getTrackingData().getStatusSPA());
+        tracking.setCodigoGuia(resulstado.getExecuteQueryResponse().getExecuteQueryResult().getTrackingData().getTrackingData().getWaybill());
+        tracking.setCodigoRastreo(resulstado.getExecuteQueryResponse().getExecuteQueryResult().getTrackingData().getTrackingData().getShortWaybillId());
         return tracking;
     }
 
